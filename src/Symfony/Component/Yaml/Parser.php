@@ -567,7 +567,7 @@ class Parser
      *
      * @throws ParseException When indentation problem are detected
      */
-    private function getNextEmbedBlock(int $indentation = null, bool $inSequence = false, $isInlineFirstChild = false): string
+    private function getNextEmbedBlock(int $indentation = null, bool $inSequence = false, bool $isInlineFirstChild = false): string
     {
         $oldLineIndentation = $this->getCurrentLineIndentation();
 
@@ -608,9 +608,8 @@ class Parser
         }
 
         $data = [];
-        if ($isInlineFirstChild) {
-            $data[] = substr($this->currentLine, $newIndent);
-        } elseif ($this->getCurrentLineIndentation() >= $newIndent) {
+
+        if ($isInlineFirstChild || $this->getCurrentLineIndentation() >= $newIndent) {
             $data[] = substr($this->currentLine, $newIndent);
         } elseif ($this->isCurrentLineEmpty() || $this->isCurrentLineComment()) {
             $data[] = $this->currentLine;
