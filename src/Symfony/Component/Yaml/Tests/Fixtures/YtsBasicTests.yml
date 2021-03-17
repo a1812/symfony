@@ -201,9 +201,7 @@ php: |
        ]
      ]
 ---
-test: Block Sequence in Block Sequence 1
-brief: |
-  Block Sequence in Block Sequence 1
+test: Inline first element in sequence blocks 1
 yaml: |
   - - s1_i1
     - s1_i2
@@ -217,9 +215,7 @@ php: |
     "s2"
   ]
 ---
-test: Block Sequence in Block Sequence 2
-brief: |
-  Block Sequence in Block Sequence 2
+test: Inline first element in sequence blocks 2
 yaml: |
   - - s1_i1
     - - s1_i1_1
@@ -236,5 +232,5 @@ php: |
       ],
       "s1_i2"
     ],
-      "s2"
+    "s2"
   ]
