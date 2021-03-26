@@ -171,7 +171,13 @@ class Parser
                 // array
                 if (isset($values['value']) && 0 === strpos(ltrim($values['value'], ' '), '-')) {
                     // Inline first child
-                    $data[] = $this->parseBlock($this->getRealCurrentLineNb() + 1, $this->getNextEmbedBlock(2, true, true) ?? '', $flags);
+                    $currentLineNumber = $this->getRealCurrentLineNb();
+
+                    $sequenceIndentation = strlen($values['leadspaces']) + 1;
+                    $sequenceYaml = substr($this->currentLine, $sequenceIndentation);
+                    $sequenceYaml .= "\n".$this->getNextEmbedBlock($sequenceIndentation, true);
+
+                    $data[] = $this->parseBlock($currentLineNumber, rtrim($sequenceYaml), $flags);
                 } elseif (!isset($values['value']) || '' == trim($values['value'], ' ') || 0 === strpos(ltrim($values['value'], ' '), '#')) {
                     $data[] = $this->parseBlock($this->getRealCurrentLineNb() + 1, $this->getNextEmbedBlock(null, true) ?? '', $flags);
                 } elseif (null !== $subTag = $this->getLineTag(ltrim($values['value'], ' '), $flags)) {
@@ -559,19 +565,18 @@ class Parser
     /**
      * Returns the next embed block of YAML.
      *
-     * @param int|null $indentation        The indent level at which the block is to be read, or null for default
-     * @param bool     $inSequence         True if the enclosing data structure is a sequence
-     * @param bool     $isInlineFirstChild True if the definition has an inline first element
+     * @param int|null $indentation The indent level at which the block is to be read, or null for default
+     * @param bool     $inSequence  True if the enclosing data structure is a sequence
      *
      * @return string A YAML string
      *
      * @throws ParseException When indentation problem are detected
      */
-    private function getNextEmbedBlock(int $indentation = null, bool $inSequence = false, bool $isInlineFirstChild = false): string
+    private function getNextEmbedBlock(int $indentation = null, bool $inSequence = false): string
     {
         $oldLineIndentation = $this->getCurrentLineIndentation();
 
-        if (!$isInlineFirstChild && !$this->moveToNextLine()) {
+        if (!$this->moveToNextLine()) {
             return '';
         }
 
@@ -609,7 +614,7 @@ class Parser
 
         $data = [];
 
-        if ($isInlineFirstChild || $this->getCurrentLineIndentation() >= $newIndent) {
+        if ($this->getCurrentLineIndentation() >= $newIndent) {
             $data[] = substr($this->currentLine, $newIndent);
         } elseif ($this->isCurrentLineEmpty() || $this->isCurrentLineComment()) {
             $data[] = $this->currentLine;
@@ -619,7 +624,7 @@ class Parser
             return '';
         }
 
-        if (!$isInlineFirstChild && $inSequence && $oldLineIndentation === $newIndent && isset($data[0][0]) && '-' === $data[0][0]) {
+        if ($inSequence && $oldLineIndentation === $newIndent && isset($data[0][0]) && '-' === $data[0][0]) {
             // the previous line contained a dash but no item content, this line is a sequence item with the same indentation
             // and therefore no nested list or mapping
             $this->moveToPreviousLine();
@@ -638,7 +643,7 @@ class Parser
 
             $indent = $this->getCurrentLineIndentation();
 
-            if (!$isInlineFirstChild && $isItUnindentedCollection && !$this->isCurrentLineEmpty() && !$this->isStringUnIndentedCollectionItem() && $newIndent === $indent) {
+            if ($isItUnindentedCollection && !$this->isCurrentLineEmpty() && !$this->isStringUnIndentedCollectionItem() && $newIndent === $indent) {
                 $this->moveToPreviousLine();
                 break;
             }
